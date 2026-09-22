@@ -1,0 +1,40 @@
+name: Build Resume
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build PDF with Fedora 32
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t german-resume .
+
+      - name: Compile LaTeX resume
+        run: |
+          docker run --rm \
+            -v "$PWD/CV:/app/CV" \
+            german-resume
+
+      - name: Verify PDF
+        run: |
+          test -s CV/main.pdf
+          ls -lh CV/main.pdf
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: german-zaletin-resume
+          path: CV/main.pdf
+          if-no-files-found: error
